@@ -53,3 +53,6 @@
   **© 2025 ˹ᴀʀᴛɪꜱᴛ ᴍᴜꜱɪᴄ˼. All rights reserved.**
   
 </div>
+
+
+<img src="https://readme-typing-svg.herokuapp.com?color=FF0000&width=420&lines=⚠️𝗙𝗢𝗥𝗞+𝗔𝗹𝗼𝗻𝗲𝗫+𝗗𝗘𝗣𝗟𝗢𝗬⚠️">

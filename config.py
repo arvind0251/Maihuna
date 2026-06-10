@@ -3,12 +3,12 @@
 # All Rights Reserved.
 #
 # Project      : ArtistBots API Telegram Music Bot
-# Powered By   : Artist
+# Powered By   : @II_SPICY_TEJAL_II
 # Type         : API Based Telegram Music Bot
 #
-# Bot          : @ArtistApibot
-# Channel      : https://t.me/artistbots
-# GitHub       : https://github.com/elevenyts
+# Bot          : @MIKUU_MUSIC_BOT
+# Channel      : https://t.me/JAAT_HEART_STRINGS
+# GitHub       : https://t.me/+Udg3p4-NuIZjZDVl
 #
 # Unauthorized copying, modification, or redistribution
 # of this source code without permission is prohibited.

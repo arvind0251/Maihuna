@@ -17,7 +17,6 @@ import os
 import re
 import asyncio
 import aiohttp
-import base64
 
 from PIL import (
     Image,
@@ -56,12 +55,7 @@ ICONS_Y = BAR_Y + 65
 
 MAX_TITLE_WIDTH = 850
 
-_f = "QXJ0aXN0Ym90cw=="
 
-
-def _decode_f():
-    decoded = base64.b64decode(_f).decode("utf-8")
-    return f"✦ {decoded} ✦"
 
 
 def trim_to_width(text: str, font, max_w: int) -> str:
@@ -211,12 +205,7 @@ class Thumbnail:
 
             draw = ImageDraw.Draw(bg)
 
-            draw.text(
-                (45, 22),
-                _decode_f(),
-                fill=(255, 255, 255, 230),
-                font=self.signature_font
-            )
+
 
             thumb = base.resize((THUMB_W, THUMB_H))
 

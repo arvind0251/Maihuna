@@ -10,7 +10,7 @@
   <p><b>A Powerful Telegram Music Player Bot</b></p>
   
   [![Telegram](https://img.shields.io/badge/Telegram-Channel-blue?style=for-the-badge&logo=telegram)](https://t.me/elevenyts)
-  [![Telegram](https://img.shields.io/badge/Telegram-Support-blue?style=for-the-badge&logo=telegram)](https://t.me/elevenytsmusic)
+  [![Telegram](https://img.shields.io/badge/Telegram-Support-blue?style=for-the-badge&logo=telegram)]([https://t.me/elevenytsmusic](https://t.me/elevenyts))
   
 </div>
 
@@ -40,8 +40,8 @@
 </p>
 ---
 
-- **Telegram Channel**: [Artist bots](https://t.me/Artistbots)
-- **Support Group**: [Elevenyts Music](https://t.me/elevenytsmusic) 
+- **Telegram Channel**: [Artist bots](https://t.me/YanYanPTM)
+- **Support Group**: [Elevenyts Music](https://t.me/+iY_v1rcOP2NmMTNl) 
 
 ---
 

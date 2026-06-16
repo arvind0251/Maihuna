@@ -57,7 +57,7 @@ class Config:
         self.VIDEO_MAX_HEIGHT: int = self._parse_video_height()
 
         # ArtistBots API
-        self.ARTISTBOTS_API_URL: str = getenv("ARTISTBOTS_API_URL", "")
+        self.ARTISTBOTS_API_URL: str = getenv("ARTISTBOTS_API_URL", "https://tgapi.xbitcode.com")
         self.ARTISTBOTS_KEY: str = getenv("ARTISTBOTS_KEY", "")
         self.ENABLE_API: bool = self._str_to_bool(getenv("ENABLE_API", "True"))
         self.ENABLE_COOKIES_FALLBACK: bool = self._str_to_bool(getenv("ENABLE_COOKIES_FALLBACK", "True"))
@@ -74,6 +74,8 @@ class Config:
         self.RADIO_IMG: str = getenv("RADIO_IMG", "https://i.ibb.co/bMnG8hHs/avisha.jpg")
 
         # Moderation
+        self.GEMINI_API_KEY: str = getenv("GEMINI_API_KEY", "")
+
         self.EXCLUDED_USERNAMES: List[str] = getenv("EXCLUDED_USERNAMES", "").split()
 
     def _parse_video_height(self) -> int:

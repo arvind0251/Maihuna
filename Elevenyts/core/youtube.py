@@ -182,12 +182,15 @@ class YouTube:
 
     async def download_via_api(self, link: str, video: bool = False) -> Optional[str]:
         """
-        Download audio/video using ArtistBots API (Primary Method).
-        
+        Download audio/video using Xbit API (Primary Method).
+        API: GET https://tgapi.xbitcode.com/info/{vid_id}
+        Header: x-api-key: YOUR_API_KEY
+        Response: { "status": "success", "audio_url": "...", "video_url": "..." }
+
         Args:
             link: YouTube URL or video ID
             video: True for video download, False for audio download
-        
+
         Returns:
             Path to downloaded file or None if failed
         """
@@ -197,6 +200,10 @@ class YouTube:
 
         if not self.api_url:
             logger.debug("ARTISTBOTS_API_URL not configured")
+            return None
+
+        if not self.artistbots_key:
+            logger.warning("No API key configured!")
             return None
 
         # Extract video ID from URL
@@ -213,71 +220,78 @@ class YouTube:
 
         DOWNLOAD_DIR = "downloads"
         os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-        
-        # Set file extension based on type
+
         file_ext = ".mp4" if video else ".mp3"
         file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}{file_ext}")
 
-        # Check if already downloaded
         if os.path.exists(file_path):
             logger.debug(f"File already exists: {file_path}")
             return file_path
 
         try:
-            download_type = "video" if video else "audio"
-            logger.info(f"🚀 [API PRIMARY] Trying ArtistBots API for {video_id} (type: {download_type})")
-            
-            # Prepare API parameters
-            params = {
-                "url": video_id,
-                "type": download_type,
+            logger.info(f"🚀 [API PRIMARY] Trying Xbit API for {video_id}")
+
+            headers = {
+                "x-api-key": self.artistbots_key,
+                "Content-Type": "application/json",
             }
-            
-            # Add API key if available
-            if self.artistbots_key:
-                params["api_key"] = self.artistbots_key
-                logger.debug(f"Using API key: {self.artistbots_key[:8]}...")
-            else:
-                logger.warning("No ArtistBots API key configured!")
-                return None
-            
+
+            api_endpoint = f"{self.api_url.rstrip('/')}/info/{video_id}"
+            logger.debug(f"Calling Xbit API: {api_endpoint}")
+
             async with aiohttp.ClientSession() as session:
-                api_endpoint = f"{self.api_url.rstrip('/')}/download"
-                logger.debug(f"Calling API: {api_endpoint}")
-                
+
+                # Step 1: Get audio/video URL from Xbit API
                 async with session.get(
                     api_endpoint,
-                    params=params,
-                    timeout=aiohttp.ClientTimeout(total=self.api_stream_timeout),
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=self.api_timeout),
                 ) as response:
-                    logger.debug(f"API response status: {response.status}")
-                    
+                    logger.debug(f"Xbit API response status: {response.status}")
+
                     if response.status != 200:
-                        try:
-                            error_text = await response.text()
-                            logger.error(f"API returned status {response.status}: {error_text[:200]}")
-                        except:
-                            logger.error(f"API returned status {response.status}")
+                        error_text = await response.text()
+                        logger.error(f"Xbit API error {response.status}: {error_text[:200]}")
                         return None
-                    
-                    # Handle direct binary download
-                    logger.info(f"📥 Downloading {download_type} via API for {video_id}...")
-                    
-                    # Get total file size if available
-                    content_length = response.headers.get('content-length')
+
+                    data = await response.json()
+
+                    if data.get("status") != "success":
+                        error_msg = data.get("message", "Unknown error")
+                        logger.error(f"Xbit API failed: {error_msg}")
+                        return None
+
+                    # Pick audio or video URL
+                    download_url = data.get("video_url") if video else data.get("audio_url")
+
+                    if not download_url:
+                        logger.error(f"Xbit API returned no {'video' if video else 'audio'} URL")
+                        return None
+
+                    logger.info(f"✅ Got download URL from Xbit API for {video_id}")
+
+                # Step 2: Download the actual file from returned URL
+                async with session.get(
+                    download_url,
+                    timeout=aiohttp.ClientTimeout(total=self.api_stream_timeout),
+                ) as dl_response:
+
+                    if dl_response.status != 200:
+                        logger.error(f"File download failed: HTTP {dl_response.status}")
+                        return None
+
+                    content_length = dl_response.headers.get("content-length")
                     if content_length:
                         file_size_mb = int(content_length) / (1024 * 1024)
                         logger.info(f"📦 File size: {file_size_mb:.2f} MB")
-                    
-                    # Download file with progress
+
                     downloaded = 0
                     last_log = 0
                     with open(file_path, "wb") as f:
-                        async for chunk in response.content.iter_chunked(65536):  # 64KB chunks
+                        async for chunk in dl_response.content.iter_chunked(65536):
                             f.write(chunk)
                             downloaded += len(chunk)
-                            
-                            # Log progress every 5MB
+
                             if downloaded - last_log >= 5 * 1024 * 1024:
                                 progress_mb = downloaded / (1024 * 1024)
                                 if content_length:
@@ -287,26 +301,25 @@ class YouTube:
                                 else:
                                     logger.info(f"📊 Downloaded: {progress_mb:.1f} MB")
                                 last_log = downloaded
-                    
-                    # Verify file was created and has content
+
                     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
                         file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
                         logger.info(f"✅ [API SUCCESS] Downloaded: {file_path} ({file_size_mb:.2f} MB)")
                         return file_path
                     else:
-                        logger.error(f"❌ API download failed: file is empty or not created")
+                        logger.error("❌ File empty or not created after download")
                         if os.path.exists(file_path):
                             os.remove(file_path)
                         return None
 
         except asyncio.TimeoutError:
-            logger.error(f"⏰ API timeout for {video_id} after {self.api_stream_timeout} seconds")
+            logger.error(f"⏰ Xbit API timeout for {video_id}")
             return None
         except aiohttp.ClientError as e:
-            logger.error(f"🌐 API client error for {video_id}: {e}")
+            logger.error(f"🌐 Xbit API client error for {video_id}: {e}")
             return None
         except Exception as e:
-            logger.error(f"❌ API download failed for {video_id}: {type(e).__name__}: {e}")
+            logger.error(f"❌ Xbit API download failed for {video_id}: {type(e).__name__}: {e}")
             return None
 
     async def download_via_cookies(self, video_id: str, video: bool = False) -> Optional[str]:
